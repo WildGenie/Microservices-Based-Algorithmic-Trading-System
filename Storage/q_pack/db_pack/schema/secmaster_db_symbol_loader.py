@@ -39,15 +39,10 @@ def parse_wiki_forex():
 
     df=pd.read_json(json.dumps(rv, indent=2))
     df=pd.io.json.json_normalize(data=df['instruments'])
-    
-    symbols = []
-    for i, symbol in df.iterrows():
-        symbols.append(
-                        (symbol['name'],'Forex',
+
+    return [(symbol['name'],'Forex',
                         symbol['displayName'],
-                        'Forex', 'USD', now, now)
-                    )
-    return symbols
+                        'Forex', 'USD', now, now) for i, symbol in df.iterrows()]
 
 def insert_new_vendor(vendor, conn):
     """

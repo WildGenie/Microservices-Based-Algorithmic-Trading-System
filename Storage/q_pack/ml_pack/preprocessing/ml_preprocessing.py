@@ -15,5 +15,8 @@ def ml_preprocessing(input_file,bucket="model-support-files",fwd_returns=5):
     csv_buffer = StringIO()
     df.dropna(inplace=True)
     df.to_csv(csv_buffer,index=False)
-    s3.put_object(Bucket=Bucket, Key=("processed_"+Key),Body=csv_buffer.getvalue())
-    return ("processed_"+Key)
+    s3.put_object(
+        Bucket=Bucket, Key=f"processed_{Key}", Body=csv_buffer.getvalue()
+    )
+
+    return f"processed_{Key}"

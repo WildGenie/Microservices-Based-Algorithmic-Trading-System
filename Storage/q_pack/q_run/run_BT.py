@@ -25,7 +25,7 @@ def run(args=None):
     cerebro = bt.Cerebro()
 
     # Data feed kwargs
-    dkwargs = dict(**eval('dict(' + args.dargs + ')'))
+    dkwargs = dict(**eval(f'dict({args.dargs})'))
 
     ticker_list=args.tickers[0].split(',')
 
@@ -42,7 +42,7 @@ def run(args=None):
     cerebro.addanalyzer(bt_strategy_id_analyzer.strategy_id_analyzer,_name='strategy_id')
     cerebro.addanalyzer(bt_strat_performance_analyzer.strat_performance_analyzer,_name='strat_perf')
     cerebro.addanalyzer(bt_pos_performance_analyzer.pos_performance_analyzer,_name='pos_perf')
-    
+
     if args.ml_log:
         cerebro.addanalyzer(bt_logger_analyzer.logger_analyzer,_name='ml_logger')
 
@@ -61,8 +61,8 @@ def run(args=None):
             cerebro.adddata(data)
         cerebro.broker.setcash(args.cash)
         cerebro.addstrategy(globals()[args.strat_name].St, **args.strat_param)
- 
-    
+
+
 
     cerebro.addsizer(bt.sizers.FixedSize, stake=1000)
 

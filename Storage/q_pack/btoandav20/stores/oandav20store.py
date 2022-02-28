@@ -34,10 +34,7 @@ class SerializableEvent(object):
 
     def __getstate__(self):
         d = copy.copy(self.__dict__)
-        if self.evt.isSet():
-            d['evt'] = True
-        else:
-            d['evt'] = False
+        d['evt'] = bool(self.evt.isSet())
         return d
 
     def __setstate__(self, d):
@@ -153,7 +150,7 @@ class OandaV20Store(with_metaclass(MetaSingleton, object)):
         self._currency = None # account currency
 
         self.broker = None  # broker instance
-        self.datas = list()  # datas that have registered over start
+        self.datas = []
 
         self._env = None  # reference to cerebro for general notifications
         self._evt_acct = SerializableEvent()
@@ -212,7 +209,7 @@ class OandaV20Store(with_metaclass(MetaSingleton, object)):
     def get_notifications(self):
         '''Return the pending "store" notifications'''
         self.notifs.append(None)  # put a mark / threads could still append
-        return [x for x in iter(self.notifs.popleft, None)]
+        return list(iter(self.notifs.popleft, None))
 
     def get_positions(self):
         '''Returns the currently open positions'''
@@ -345,9 +342,13 @@ class OandaV20Store(with_metaclass(MetaSingleton, object)):
 
     def order_create(self, order, stopside=None, takeside=None, **kwargs):
         '''Creates an order'''
-        okwargs = dict()
-        okwargs['instrument'] = order.data._dataname
-        okwargs['units'] = abs(int(order.created.size)) if order.isbuy() else -abs(int(order.created.size)) # negative for selling
+        okwargs = {
+            'instrument': order.data._dataname,
+            'units': abs(int(order.created.size))
+            if order.isbuy()
+            else -abs(int(order.created.size)),
+        }
+
         okwargs['type'] = self._ORDEREXECS[order.exectype]
 
         if order.exectype != bt.Order.Market:
@@ -521,7 +522,7 @@ class OandaV20Store(with_metaclass(MetaSingleton, object)):
 
             if dtobj is not None:
                 dtkwargs['fromTime'] = dtobj.strftime("%Y-%m-%dT%H:%M:%S.000000000Z")
-            elif dtobj is None:
+            else:
                 break
             if dtend is not None and dtobj > dtend:
                 break
@@ -592,23 +593,21 @@ class OandaV20Store(with_metaclass(MetaSingleton, object)):
         if oid in self._orders:
             # when an order id exists process transaction
             self._process_transaction(oid, trans)
-        else:
-            # external order created this transaction
-            if self.broker.p.use_positions and ttype in self._X_FILL_TRANS:
-                size = float(trans['units'])
-                price = float(trans['price'])
-                for data in self.datas:
-                    if data._name == trans['instrument']:
-                        self.broker._fill_external(data, size, price)
-                        break
-            elif ttype not in self._X_IGNORE_TRANS:
-                # notify about unknown transaction
-                if self.broker.p.use_positions:
-                    msg = 'Received external transaction {} with id {}. Skipping transaction.'
-                else:
-                    msg = 'Received external transaction {} with id {}. Positions and trades may not match anymore.'
-                msg = msg.format(ttype, trans['id'])
-                self.put_notification(msg, trans)
+        elif self.broker.p.use_positions and ttype in self._X_FILL_TRANS:
+            size = float(trans['units'])
+            price = float(trans['price'])
+            for data in self.datas:
+                if data._name == trans['instrument']:
+                    self.broker._fill_external(data, size, price)
+                    break
+        elif ttype not in self._X_IGNORE_TRANS:
+            # notify about unknown transaction
+            if self.broker.p.use_positions:
+                msg = 'Received external transaction {} with id {}. Skipping transaction.'
+            else:
+                msg = 'Received external transaction {} with id {}. Positions and trades may not match anymore.'
+            msg = msg.format(ttype, trans['id'])
+            self.put_notification(msg, trans)
 
     def _process_transaction(self, oid, trans):
         try:

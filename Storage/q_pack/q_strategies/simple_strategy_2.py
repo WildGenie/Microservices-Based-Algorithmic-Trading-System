@@ -40,13 +40,9 @@ class St(bt.Strategy):
         self.buyprice = None
         self.buycomm = None
         # if arg:
-        if self.p.backtest:
-            self.datastatus = 1
-        else:
-            self.datastatus = 0
-
+        self.datastatus = 1 if self.p.backtest else 0
         if self.p.ml_serving:
-            print("s3://mlflow-models/"+self.p.model_uri+"/artifacts/model")
+            print(f"s3://mlflow-models/{self.p.model_uri}/artifacts/model")
             self.model_predict=mlflow.pyfunc.load_model(model_uri=("s3://mlflow-models/"+self.p.model_uri+"/artifacts/model"))
 
 
@@ -84,7 +80,7 @@ class St(bt.Strategy):
                         price_tp = d.close[0]+(self.atr[0] * 2)
                         self.order=self.buy_bracket(data=d,exectype=bt.Order.Market , stopprice=price_sl, limitprice=price_tp, valid=order_valid) #, valid=order_valid,price=None
                         self.log('BUY CREATE {:.2f} at {}'.format(d.close[0],dn))
-                    elif pred<=0:
+                    else:
                         price_sl = d.close[0]+(self.atr[0] * 1)
                         price_tp = d.close[0]-(self.atr[0] * 2)
                         self.order=self.sell_bracket(data=d,exectype=bt.Order.Market, stopprice=price_sl, limitprice=price_tp, valid=order_valid)

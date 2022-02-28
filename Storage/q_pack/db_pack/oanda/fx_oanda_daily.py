@@ -150,20 +150,25 @@ def oanda_historical_data(instrument,start_date,end_date,granularity='D',client=
     df_full=pd.DataFrame()
     for r in InstrumentsCandlesFactory(instrument=instrument,params=params):
         client.request(r)
-        dat = []
         api_data=r.response.get('candles')
-        if(api_data):
-            for oo in r.response.get('candles'):
-                dat.append([oo['time'], oo['volume'], oo['mid']['o'], oo['mid']['h'], oo['mid']['l'], oo['mid']['c']])
+        if api_data:
+            dat = [
+                [
+                    oo['time'],
+                    oo['volume'],
+                    oo['mid']['o'],
+                    oo['mid']['h'],
+                    oo['mid']['l'],
+                    oo['mid']['c'],
+                ]
+                for oo in r.response.get('candles')
+            ]
 
             df = pd.DataFrame(dat)
             df.columns = ['time', 'volume', 'open', 'high', 'low', 'close']
             df = df.set_index('time')
-            if df_full.empty:
-                df_full=df
-            else:
-                df_full=df_full.append(df)
-    df_full.index=pd.to_datetime(df_full.index)    
+            df_full = df if df_full.empty else df_full.append(df)
+    df_full.index=pd.to_datetime(df_full.index)
     return df_full
 
 def main():

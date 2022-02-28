@@ -64,7 +64,7 @@ class OandaV20Broker(with_metaclass(MetaOandaV20Broker, BrokerBase)):
         self.notifs = collections.deque()  # holds orders which are notified
 
         self.opending = collections.defaultdict(list)  # pending transmission
-        self.brackets = dict()  # confirmed brackets
+        self.brackets = {}
 
         self.startingcash = self.cash = 0.0
         self.startingvalue = self.value = 0.0
@@ -324,10 +324,7 @@ class OandaV20Broker(with_metaclass(MetaOandaV20Broker, BrokerBase)):
         self.notifs.append(order.clone())
 
     def get_notification(self):
-        if not self.notifs:
-            return None
-
-        return self.notifs.popleft()
+        return None if not self.notifs else self.notifs.popleft()
 
     def next(self):
         self.notifs.append(None)  # mark notification boundary

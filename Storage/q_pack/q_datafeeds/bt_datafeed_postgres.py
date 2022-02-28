@@ -20,7 +20,11 @@ class PostgreSQL_Daily(DataBase):
         )
 
     def __init__(self):
-        self.engine = create_engine('postgresql+psycopg2://'+self.p.dbUser+':'+ self.p.dbPWD +'@'+ self.p.dbHost +'/'+ self.p.dbName)
+        self.engine = create_engine(
+            f'postgresql+psycopg2://{self.p.dbUser}:{self.p.dbPWD}@{self.p.dbHost}'
+            + '/'
+            + self.p.dbName
+        )
 #         self.engine = psycopg2.connect(host=self.p.dbHost, database=self.p.dbName, user=self.p.dbUser, password=self.p.dbPWD)
 
     def start(self):
@@ -59,7 +63,12 @@ class PostgreSQL_Minute(DataBase):
         )
 
     def __init__(self):
-        self.engine = create_engine('postgresql+psycopg2://'+self.p.dbUser+':'+ self.p.dbPWD +'@'+ self.p.dbHost +'/'+ self.p.dbName)
+        self.engine = create_engine(
+            f'postgresql+psycopg2://{self.p.dbUser}:{self.p.dbPWD}@{self.p.dbHost}'
+            + '/'
+            + self.p.dbName
+        )
+
         print(self.engine)
 #         self.engine = psycopg2.connect(host=self.p.dbHost, database=self.p.dbName, user=self.p.dbUser, password=self.p.dbPWD)
 

@@ -27,7 +27,7 @@ class strategy_id_analyzer(bt.Analyzer):
 
     def start(self):
         info_run_type = 'Backtest' if self.strategy.p.backtest else 'Live'
-        info_tickers=','.join([d for d in (self.strategy.getdatanames())])
+        info_tickers = ','.join(list((self.strategy.getdatanames())))
         info_indicators = ','.join([i.aliased for i in (self.strategy.getindicators())])
         info_timeframe = self.strategy.data0._timeframe # This is currently a number, have to change it later
         if self.strategy.p.backtest:

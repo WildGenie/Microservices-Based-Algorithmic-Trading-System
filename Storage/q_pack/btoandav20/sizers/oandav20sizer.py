@@ -16,8 +16,7 @@ class OandaV20Sizer(bt.Sizer):
         self.o = oandav20store.OandaV20Store(**kwargs)
 
     def _getsizing(self, comminfo, cash, data, isbuy):
-        position = self.broker.getposition(data)
-        if position:
+        if position := self.broker.getposition(data):
             return position.size
 
         avail = 0
@@ -58,8 +57,7 @@ class OandaV20Risk(OandaV20Sizer):
 
     def _getsizing(self, comminfo, cash, data, isbuy):
 
-        position = self.broker.getposition(data)
-        if position:
+        if position := self.broker.getposition(data):
             return position.size
 
         name = data.contractdetails['name']
@@ -76,7 +74,7 @@ class OandaV20Risk(OandaV20Sizer):
 
         if sym_src != sym_to:
             # convert cash to target currency
-            price = self.o.get_pricing(sym_src + '_' + sym_to)
+            price = self.o.get_pricing(f'{sym_src}_{sym_to}')
             if price is not None:
                 cash_to_use = cash_to_use / (1 / float(price['closeoutAsk']))
 

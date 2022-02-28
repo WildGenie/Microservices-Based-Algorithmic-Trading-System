@@ -166,7 +166,7 @@ class OandaV20Data(with_metaclass(MetaOandaV20Data, DataBase)):
 
         # Create attributes as soon as possible
         self._statelivereconn = False  # if reconnecting in live state
-        self._storedmsg = dict()  # keep pending live message (under None)
+        self._storedmsg = {}
         self.qlive = queue.Queue()
         self._state = self._ST_OVER
         self.contractdetails = None
@@ -202,14 +202,8 @@ class OandaV20Data(with_metaclass(MetaOandaV20Data, DataBase)):
     def _st_start(self, instart=True, tmout=None):
         if self.p.historical:
             self.put_notification(self.DELAYED)
-            dtend = None
-            if self.todate < float('inf'):
-                dtend = num2date(self.todate)
-
-            dtbegin = None
-            if self.fromdate > float('-inf'):
-                dtbegin = num2date(self.fromdate)
-
+            dtend = num2date(self.todate) if self.todate < float('inf') else None
+            dtbegin = num2date(self.fromdate) if self.fromdate > float('-inf') else None
             self.qhist = self.o.candles(
                 self.p.dataname, dtbegin, dtend,
                 self._timeframe, self._compression,
@@ -220,10 +214,7 @@ class OandaV20Data(with_metaclass(MetaOandaV20Data, DataBase)):
             return True
 
         # depending on candles, either stream or use poll
-        if instart:
-            self._statelivereconn = self.p.backfill_start
-        else:
-            self._statelivereconn = self.p.backfill
+        self._statelivereconn = self.p.backfill_start if instart else self.p.backfill
         if self._statelivereconn:
             self.put_notification(self.DELAYED)
         if instart:
@@ -272,7 +263,7 @@ class OandaV20Data(with_metaclass(MetaOandaV20Data, DataBase)):
         '''This method will return the start of the period based on current
         time (or provided time). It is using UTC 22:00 (5:00 pm New York)
         as the start of the day.'''
-        if dt == None:
+        if dt is None:
             dt = datetime.utcnow()
         if timeframe == TimeFrame.Seconds:
             dt = dt.replace(second=(dt.second//compression)*compression, microsecond=0)
@@ -388,14 +379,10 @@ class OandaV20Data(with_metaclass(MetaOandaV20Data, DataBase)):
 
                 # Process the message according to expected return type
                 if not self._statelivereconn:
-                    if self._laststatus != self.LIVE:
-                        if self.qlive.qsize() <= 1:  # very short live queue
-                            self.put_notification(self.LIVE)
+                    if self._laststatus != self.LIVE and self.qlive.qsize() <= 1:
+                        self.put_notification(self.LIVE)
                     if msg:
-                        if self.p.candles:
-                            ret = self._load_candle(msg)
-                        else:
-                            ret = self._load_tick(msg)
+                        ret = self._load_candle(msg) if self.p.candles else self._load_tick(msg)
                         if ret:
                             return True
 
@@ -449,13 +436,12 @@ class OandaV20Data(with_metaclass(MetaOandaV20Data, DataBase)):
                     if self._load_candle(msg):
                         return True  # loading worked
 
-                    continue  # not loaded ... date may have been seen
-                else:
-                    # End of histdata
-                    if self.p.historical:  # only historical
-                        self.put_notification(self.DISCONNECTED)
-                        self._state = self._ST_OVER
-                        return False  # end of historical
+                    else:
+                        continue  # not loaded ... date may have been seen
+                elif self.p.historical:  # only historical
+                    self.put_notification(self.DISCONNECTED)
+                    self._state = self._ST_OVER
+                    return False  # end of historical
 
                 # Live is also wished - go for it
                 self._state = self._ST_LIVE

@@ -14,10 +14,8 @@ def create_db(db_credential_info):
         NoneType
     """
     db_host, db_user, db_password, db_name = db_credential_info
-    
-    if check_db_exists(db_credential_info):
-        pass
-    else:
+
+    if not check_db_exists(db_credential_info):
         print('Creating new database.')
         conn = psycopg2.connect(host=db_host, database='postgres', user=db_user, password=db_password)
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
@@ -57,7 +55,7 @@ def create_risk_tables(db_credential_info):
     """
     db_host, db_user, db_password, db_name = db_credential_info
     conn = None
-    
+
     if check_db_exists(db_credential_info):
         commands = (
                     """
@@ -154,8 +152,6 @@ def create_risk_tables(db_credential_info):
         finally:
             if conn:
                 conn.close()
-    else:
-        pass
 
 def main():
     

@@ -27,20 +27,23 @@ def create_dag(dag_id,
             dag=dag
         )
         for i,row in df.iterrows():
-            command={}
-            command['--strat_name']=row['Strategy']
-            command['--mode']=str(row['Mode'])
-            command['--tickers']=row['Securities']
-            command['--broker_token']=row['Token']
-            command['--broker_account']=row['Account']
+            command = {
+                '--strat_name': row['Strategy'],
+                '--mode': str(row['Mode']),
+                '--tickers': row['Securities'],
+                '--broker_token': row['Token'],
+                '--broker_account': row['Account'],
+            }
+
             if row['Model ID']!="" or row["Strategy Parameters"]!="":
                 command['--strat_param']=("model_uri="+row['Model ID']+","+row["Strategy Parameters"]) if row["Strategy Parameters"]!="" else ("model_uri="+row['Model ID'])
             final_commmand='python /usr/local/airflow/dags/q_pack/q_run/run_BT.py '+' '.join([(k+"="+v) for k, v in command.items() if v!=''])
             tab = BashOperator(
                 bash_command=final_commmand,
-                task_id=(str(i)+"_"+row['Strategy']),
-                dag=dag
+                task_id=f'{str(i)}_' + row['Strategy'],
+                dag=dag,
             )
+
             init >> tab >> clear
         return dag
 schedule = None #"@daily"

@@ -45,10 +45,7 @@ class St(bt.Strategy):
         self.buyprice = None
         self.buycomm = None
         # if arg:
-        if self.p.backtest:
-            self.datastatus = 1
-        else:
-            self.datastatus = 0
+        self.datastatus = 1 if self.p.backtest else 0
 
 
     def notify_data(self, data, status, *args, **kwargs):
